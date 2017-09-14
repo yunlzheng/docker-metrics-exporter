@@ -9,3 +9,6 @@ endpoints:
     id: springmetrics
     sensitive: false
     enabled: true
+
+server:
+  port: 9095
