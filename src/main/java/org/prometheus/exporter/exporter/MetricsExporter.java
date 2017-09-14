@@ -27,10 +27,11 @@ public class MetricsExporter extends Collector {
 
     @Override
     public List<MetricFamilySamples> collect() {
+        long start = System.currentTimeMillis();
         LOGGER.info("collector is working? " + collecting);
         LOGGER.info("collector data from docker daemon start");
         cache = doCollect();
-        LOGGER.info("collector data from docker daemon finished");
+        LOGGER.info(String.format("collector data from docker daemon finished[%d]", System.currentTimeMillis() - start));
         return cache;
     }
 
@@ -56,6 +57,7 @@ public class MetricsExporter extends Collector {
                 }
 
                 String containerName = getContainerName(container);
+                LOGGER.info("inspect container " + containerName + " information");
                 labels.add(0, "name");
                 labelValues.add(0, containerName);
 
