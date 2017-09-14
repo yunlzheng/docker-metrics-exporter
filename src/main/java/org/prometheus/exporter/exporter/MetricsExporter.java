@@ -28,14 +28,10 @@ public class MetricsExporter extends Collector {
     @Override
     public List<MetricFamilySamples> collect() {
         LOGGER.info("collector is working? " + collecting);
-        if (!collecting) {
-            LOGGER.info("collector data from docker daemon");
-            cache = doCollect();
-            return cache;
-        } else {
-            LOGGER.info("collector data from cache");
-            return cache;
-        }
+        LOGGER.info("collector data from docker daemon start");
+        cache = doCollect();
+        LOGGER.info("collector data from docker daemon finished");
+        return cache;
     }
 
     private List<MetricFamilySamples> doCollect() {
