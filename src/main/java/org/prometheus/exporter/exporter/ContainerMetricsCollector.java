@@ -3,13 +3,11 @@ package org.prometheus.exporter.exporter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerStats;
-import io.prometheus.client.GaugeMetricFamily;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -18,13 +16,12 @@ public class ContainerMetricsCollector implements Runnable {
     private static Logger LOGGER = LoggerFactory.getLogger(ContainerMetricsCollector.class);
 
     private final Container container;
-    private DefaultDockerClient docker;
+    private final DefaultDockerClient docker;
     private final CountDownLatch latch;
-    private GaugeMetricFamily memLimitGauge;
-    private GaugeMetricFamily memUsedGauge;
-    private GaugeMetricFamily memUsageGauge;
 
     private boolean collected;
+    private Map<String, String> labels = new HashMap<>();
+    private ContainerMetrics metrics;
 
     public ContainerMetricsCollector(Container container, DefaultDockerClient docker, CountDownLatch latch) {
         this.container = container;
@@ -36,32 +33,18 @@ public class ContainerMetricsCollector implements Runnable {
     @Override
     public void run() {
         try {
-            List<String> labels = new ArrayList<>();
-            List<String> labelValues = new ArrayList<>();
             Map<String, String> containerLabels = container.labels();
             for (String key : containerLabels.keySet()) {
-                labels.add(String.format("container_label_%s", key.replace(".", "_")).toLowerCase());
-                labelValues.add(containerLabels.get(key));
+                labels.put(String.format("container_label_%s", key.replace(".", "_")).toLowerCase(), containerLabels.get(key));
             }
-
             String containerName = getContainerName(container);
             LOGGER.info("inspect start container " + containerName + " information");
-            labels.add(0, "name");
-            labelValues.add(0, containerName);
-
+            labels.put("name", containerName);
             ContainerStats stats = docker.stats(container.id());
-
-            memLimitGauge = new GaugeMetricFamily("io_container_mem_limit", "io_container_mem_limit", labels);
-            memUsedGauge = new GaugeMetricFamily("io_container_mem_used", "io_container_mem_used", labels);
-            memUsageGauge = new GaugeMetricFamily("io_container_mem_usage", "io_container_mem_usage", labels);
-
             Long limit = stats.memoryStats().limit();
-            Long usage = stats.memoryStats().usage();
-
-            memLimitGauge.addMetric(labelValues, limit);
-            memUsedGauge.addMetric(labelValues, usage);
-            memUsageGauge.addMetric(labelValues, new BigDecimal(Double.toString(usage)).divide(new BigDecimal(Double.toString(limit)), 4, BigDecimal.ROUND_HALF_UP).doubleValue());
-
+            Long used = stats.memoryStats().usage();
+            double usage = new BigDecimal(Double.toString(used)).divide(new BigDecimal(Double.toString(limit)), 4, BigDecimal.ROUND_HALF_UP).doubleValue();
+            metrics = new ContainerMetrics(limit, used, usage);
             collected = true;
             LOGGER.info("inspect done container " + containerName + " information");
 
@@ -85,15 +68,47 @@ public class ContainerMetricsCollector implements Runnable {
         return collected;
     }
 
-    public GaugeMetricFamily getMemLimitGauge() {
-        return memLimitGauge;
+    public Map<String, String> getLabels() {
+        return labels;
     }
 
-    public GaugeMetricFamily getMemUsageGauge() {
-        return memUsageGauge;
+    public ContainerMetrics getMetrics() {
+        return metrics;
+    }
+}
+
+class ContainerMetrics {
+    private long memLimit;
+    private long memUsage;
+    private double memUsed;
+
+    public ContainerMetrics(long memLimit, long memUsage, double memUsed) {
+        this.memLimit = memLimit;
+        this.memUsage = memUsage;
+        this.memUsed = memUsed;
     }
 
-    public GaugeMetricFamily getMemUsedGauge() {
-        return memUsedGauge;
+    public long getMemLimit() {
+        return memLimit;
+    }
+
+    public void setMemLimit(long memLimit) {
+        this.memLimit = memLimit;
+    }
+
+    public long getMemUsage() {
+        return memUsage;
+    }
+
+    public void setMemUsage(long memUsage) {
+        this.memUsage = memUsage;
+    }
+
+    public double getMemUsed() {
+        return memUsed;
+    }
+
+    public void setMemUsed(double memUsed) {
+        this.memUsed = memUsed;
     }
 }
