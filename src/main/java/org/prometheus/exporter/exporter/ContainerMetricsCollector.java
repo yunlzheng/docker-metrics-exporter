@@ -79,10 +79,10 @@ public class ContainerMetricsCollector implements Runnable {
 
 class ContainerMetrics {
     private long memLimit;
-    private long memUsage;
-    private double memUsed;
+    private long memUsed;
+    private double memUsage;
 
-    public ContainerMetrics(long memLimit, long memUsage, double memUsed) {
+    public ContainerMetrics(long memLimit, long memUsed, double memUsage) {
         this.memLimit = memLimit;
         this.memUsage = memUsage;
         this.memUsed = memUsed;
@@ -96,19 +96,19 @@ class ContainerMetrics {
         this.memLimit = memLimit;
     }
 
-    public long getMemUsage() {
+    public double getMemUsage() {
         return memUsage;
     }
 
-    public void setMemUsage(long memUsage) {
+    public void setMemUsage(double memUsage) {
         this.memUsage = memUsage;
     }
 
-    public double getMemUsed() {
+    public long getMemUsed() {
         return memUsed;
     }
 
-    public void setMemUsed(double memUsed) {
+    public void setMemUsed(long memUsed) {
         this.memUsed = memUsed;
     }
 }
