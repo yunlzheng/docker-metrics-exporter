@@ -20,9 +20,11 @@ public class MetricsExporter extends Collector {
     private DefaultDockerClient docker;
 
     private static CountDownLatch _latch;
+    private Executor executor;
 
     public MetricsExporter() {
         docker = new DefaultDockerClient("unix:///var/run/docker.sock");
+        executor = Executors.newFixedThreadPool(20);
     }
 
     @Override
@@ -41,7 +43,6 @@ public class MetricsExporter extends Collector {
             List<Container> containers = docker.listContainers();
             _latch = new CountDownLatch(containers.size());
             List<ContainerMetricsCollector> collectors = containers.stream().map(container -> new ContainerMetricsCollector(container, docker, _latch)).collect(toList());
-            Executor executor = Executors.newFixedThreadPool(collectors.size());
             collectors.forEach(executor::execute);
             _latch.await();
 
