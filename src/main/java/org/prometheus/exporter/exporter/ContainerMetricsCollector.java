@@ -40,6 +40,7 @@ public class ContainerMetricsCollector implements Runnable {
             String containerName = getContainerName(container);
             LOGGER.info("inspect start container " + containerName + " information");
             labels.put("name", containerName);
+            labels.put("image", container.image());
             ContainerStats stats = docker.stats(container.id());
             Long limit = stats.memoryStats().limit();
             Long used = stats.memoryStats().usage();
