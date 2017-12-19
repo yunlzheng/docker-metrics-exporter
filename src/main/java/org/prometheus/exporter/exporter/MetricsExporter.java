@@ -39,7 +39,7 @@ public class MetricsExporter extends Collector {
     private List<MetricFamilySamples> doCollect() {
         List<MetricFamilySamples> mfs = new ArrayList<>();
         try {
-            
+
             List<Container> containers = docker.listContainers();
             _latch = new CountDownLatch(containers.size());
             List<ContainerMetricsCollector> collectors = containers.stream().map(container -> new ContainerMetricsCollector(container, docker, _latch)).collect(toList());
@@ -73,7 +73,7 @@ public class MetricsExporter extends Collector {
 
     private List<String> getLabelValues(ArrayList<String> labels, Map<String, String> collectorLabels) {
         ArrayList<String> values = new ArrayList<>();
-        labels.forEach(label -> values.add(collectorLabels.get(label)));
+        labels.forEach(label -> values.add(collectorLabels.getOrDefault(label, "")));
         return values;
     }
 
@@ -85,7 +85,6 @@ public class MetricsExporter extends Collector {
             if (i == 0) {
                 labels.addAll(keys);
             }
-            labels.retainAll(keys);
         }
 
         ArrayList<String> labs = new ArrayList<>();

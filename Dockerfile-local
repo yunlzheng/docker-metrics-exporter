@@ -1,0 +1,8 @@
+FROM java:8
+
+WORKDIR /exporter/
+
+COPY build/libs/docker-metrics-exporter.jar .
+ADD entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
