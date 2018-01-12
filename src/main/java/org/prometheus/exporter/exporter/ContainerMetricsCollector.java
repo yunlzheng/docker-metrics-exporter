@@ -149,6 +149,14 @@ class ContainerMetrics {
         this.memUsed = memUsed;
     }
 
+    public double getCpuPercent() {
+        return cpuPercent;
+    }
+
+    public void setCpuPercent(double cpuPercent) {
+        this.cpuPercent = cpuPercent;
+    }
+
     @Override
     public String toString() {
         return "ContainerMetrics{" +

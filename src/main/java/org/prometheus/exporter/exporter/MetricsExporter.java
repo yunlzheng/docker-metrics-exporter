@@ -53,17 +53,20 @@ public class MetricsExporter extends Collector {
             GaugeMetricFamily memLimitGauge = new GaugeMetricFamily("io_container_mem_limit", "io_container_mem_limit", labels);
             GaugeMetricFamily memUsedGauge = new GaugeMetricFamily("io_container_mem_used", "io_container_mem_used", labels);
             GaugeMetricFamily memUsageGauge = new GaugeMetricFamily("io_container_mem_usage", "io_container_mem_usage", labels);
+            GaugeMetricFamily cpuUsageGauge = new GaugeMetricFamily("io_container_cpu_usage", "io_container_cpu_usage", labels);
 
             results.forEach(collector -> {
                 List<String> labelValues = getLabelValues(labels, collector.getLabels());
                 memLimitGauge.addMetric(labelValues, collector.getMetrics().getMemLimit());
                 memUsedGauge.addMetric(labelValues, collector.getMetrics().getMemUsed());
                 memUsageGauge.addMetric(labelValues, collector.getMetrics().getMemUsage());
+                cpuUsageGauge.addMetric(labelValues, collector.getMetrics().getCpuPercent());
             });
 
             mfs.add(memLimitGauge);
             mfs.add(memUsedGauge);
             mfs.add(memUsageGauge);
+            mfs.add(cpuUsageGauge);
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
