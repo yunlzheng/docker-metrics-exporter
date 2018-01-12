@@ -76,7 +76,7 @@ public class MetricsExporter extends Collector {
 
     private List<String> getLabelValues(ArrayList<String> labels, Map<String, String> collectorLabels) {
         ArrayList<String> values = new ArrayList<>();
-        labels.forEach(label -> values.add(collectorLabels.getOrDefault(label, "")));
+        labels.forEach(label -> values.add(collectorLabels.getOrDefault(label, "default")));
         return values;
     }
 
