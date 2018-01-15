@@ -38,7 +38,7 @@ public class ContainerMetricsCollector implements Runnable {
         try {
             Map<String, String> containerLabels = container.labels();
             for (String key : containerLabels.keySet()) {
-                labels.put(String.format("container_label_%s", key.replace(".", "_")).toLowerCase(), containerLabels.get(key));
+                labels.put(String.format("container_label_%s", key.replace(".", "_").replace("-", "_")).toLowerCase(), containerLabels.get(key));
             }
             String containerName = getContainerName(container);
             labels.put("name", containerName);
