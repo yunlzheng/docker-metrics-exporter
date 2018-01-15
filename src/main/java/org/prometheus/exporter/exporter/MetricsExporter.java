@@ -3,6 +3,7 @@ package org.prometheus.exporter.exporter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.messages.Container;
 import io.prometheus.client.Collector;
+import io.prometheus.client.CounterMetricFamily;
 import io.prometheus.client.GaugeMetricFamily;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,8 @@ public class MetricsExporter extends Collector {
             GaugeMetricFamily memUsedGauge = new GaugeMetricFamily("io_container_mem_used", "io_container_mem_used", labels);
             GaugeMetricFamily memUsageGauge = new GaugeMetricFamily("io_container_mem_usage", "io_container_mem_usage", labels);
             GaugeMetricFamily cpuUsageGauge = new GaugeMetricFamily("io_container_cpu_usage", "io_container_cpu_usage", labels);
+            CounterMetricFamily networkRxBytesCounter = new CounterMetricFamily("io_container_network_receive_bytes_total", "io_container_network_receive_bytes_total", labels);
+            CounterMetricFamily networkTxBytesCounter = new CounterMetricFamily("io_container_network_transmit_bytes_total", "io_container_network_transmit_bytes_total", labels);
 
             results.forEach(collector -> {
                 List<String> labelValues = getLabelValues(labels, collector.getLabels());
@@ -61,12 +64,16 @@ public class MetricsExporter extends Collector {
                 memUsedGauge.addMetric(labelValues, collector.getMetrics().getMemUsed());
                 memUsageGauge.addMetric(labelValues, collector.getMetrics().getMemUsage());
                 cpuUsageGauge.addMetric(labelValues, collector.getMetrics().getCpuPercent());
+                networkRxBytesCounter.addMetric(labelValues, collector.getMetrics().getRxBytes());
+                networkTxBytesCounter.addMetric(labelValues, collector.getMetrics().getTxBytes());
             });
 
             mfs.add(memLimitGauge);
             mfs.add(memUsedGauge);
             mfs.add(memUsageGauge);
             mfs.add(cpuUsageGauge);
+            mfs.add(networkRxBytesCounter);
+            mfs.add(networkTxBytesCounter);
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage());

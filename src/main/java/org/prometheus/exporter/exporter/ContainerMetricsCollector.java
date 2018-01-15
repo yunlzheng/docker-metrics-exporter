@@ -38,7 +38,9 @@ public class ContainerMetricsCollector implements Runnable {
         try {
             Map<String, String> containerLabels = container.labels();
             for (String key : containerLabels.keySet()) {
-                labels.put(String.format("container_label_%s", key.replace(".", "_").replace("-", "_")).toLowerCase(), containerLabels.get(key));
+                labels
+                        .put(String.format("container_label_%s", key.replace(".", "_").replace("-", "_")).toLowerCase(),
+                                containerLabels.get(key));
             }
             String containerName = getContainerName(container);
             labels.put("name", containerName);
@@ -47,16 +49,24 @@ public class ContainerMetricsCollector implements Runnable {
             Long memLimit = stats.memoryStats().limit();
             Long memUsed = stats.memoryStats().usage();
 
-            Long previousCPU = stats.precpuStats().cpuUsage().totalUsage();
-            Long previousSystem = stats.precpuStats().systemCpuUsage();
-            double cpuPercent = calculateCPUPercentUnix(previousCPU, previousSystem, stats);
-
             double memUsage = new BigDecimal(Double.toString(memUsed))
                     .divide(
                             new BigDecimal(Double.toString(memLimit)), 4, BigDecimal.ROUND_HALF_UP
                     )
                     .doubleValue();
-            metrics = new ContainerMetrics(memLimit, memUsed, memUsage, cpuPercent);
+
+            double cpuPercent = calculateCPUPercentUnix(
+                    stats.precpuStats().cpuUsage().totalUsage(),
+                    stats.precpuStats().systemCpuUsage(), stats);
+
+            Long rxBytes = 0l;
+            Long txBytes = 0l;
+            if (stats.network() != null) {
+                rxBytes = stats.network().rxBytes();
+                txBytes = stats.network().txBytes();
+            }
+
+            metrics = new ContainerMetrics(memLimit, memUsed, memUsage, cpuPercent, rxBytes, txBytes);
             LOGGER.info(metrics.toString());
             collected = true;
 
@@ -84,14 +94,10 @@ public class ContainerMetricsCollector implements Runnable {
     }
 
     private double getCpuUsage(long cpuDelta, long systemDelta) {
-
-
-        double usage = new BigDecimal(Double.toString(cpuDelta))
+        return new BigDecimal(Double.toString(cpuDelta))
                 .divide(
                         new BigDecimal(Double.toString(systemDelta)), 4, BigDecimal.ROUND_HALF_UP
                 ).doubleValue();
-
-        return usage;
     }
 
     private String getContainerName(Container container) {
@@ -116,45 +122,41 @@ class ContainerMetrics {
     private long memLimit;
     private long memUsed;
     private double cpuPercent;
+    private Long rxBytes;
+    private Long txBytes;
     private double memUsage;
 
-    public ContainerMetrics(long memLimit, long memUsed, double memUsage, double cpuPercent) {
+    public ContainerMetrics(long memLimit, long memUsed, double memUsage, double cpuPercent, Long rxBytes, Long txBytes) {
         this.memLimit = memLimit;
         this.memUsage = memUsage;
         this.memUsed = memUsed;
         this.cpuPercent = cpuPercent;
+        this.rxBytes = rxBytes;
+        this.txBytes = txBytes;
     }
 
     public long getMemLimit() {
         return memLimit;
     }
 
-    public void setMemLimit(long memLimit) {
-        this.memLimit = memLimit;
-    }
-
     public double getMemUsage() {
         return memUsage;
-    }
-
-    public void setMemUsage(double memUsage) {
-        this.memUsage = memUsage;
     }
 
     public long getMemUsed() {
         return memUsed;
     }
 
-    public void setMemUsed(long memUsed) {
-        this.memUsed = memUsed;
-    }
-
     public double getCpuPercent() {
         return cpuPercent;
     }
 
-    public void setCpuPercent(double cpuPercent) {
-        this.cpuPercent = cpuPercent;
+    public Long getRxBytes() {
+        return rxBytes;
+    }
+
+    public Long getTxBytes() {
+        return txBytes;
     }
 
     @Override
@@ -164,6 +166,8 @@ class ContainerMetrics {
                 ", memLimit=" + memLimit +
                 ", memUsed=" + memUsed +
                 ", memUsage=" + memUsage +
+                ", rxBytes=" + rxBytes +
+                ", txBytes=" + txBytes +
                 '}';
     }
 }
