@@ -3,11 +3,13 @@ package org.prometheus.exporter.exporter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerStats;
+import com.spotify.docker.client.messages.NetworkStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -59,14 +61,31 @@ public class ContainerMetricsCollector implements Runnable {
                     stats.precpuStats().cpuUsage().totalUsage(),
                     stats.precpuStats().systemCpuUsage(), stats);
 
-            Long rxBytes = 0l;
-            Long txBytes = 0l;
-            if (stats.network() != null) {
-                rxBytes = stats.network().rxBytes();
-                txBytes = stats.network().txBytes();
+            long rxBytes = 0l;
+            long txBytes = 0l;
+
+            for (String eth : stats.networks().keySet()) {
+                NetworkStats networkStats = stats.networks().get(eth);
+                rxBytes += networkStats.rxBytes();
+                txBytes += networkStats.txBytes();
             }
 
-            metrics = new ContainerMetrics(memLimit, memUsed, memUsage, cpuPercent, rxBytes, txBytes);
+            long blkRead = 0l;
+            long blkWrite = 0l;
+
+            for (Object bioEntry : stats.blockIoStats().ioServiceBytesRecursive()) {
+                if (bioEntry instanceof LinkedHashMap) {
+                    LinkedHashMap<String, Object> entry = (LinkedHashMap) bioEntry;
+                    if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("read")) {
+                        blkRead = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
+                    }
+                    if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("write")) {
+                        blkWrite = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
+                    }
+                }
+            }
+
+            metrics = new ContainerMetrics(memLimit, memUsed, memUsage, cpuPercent, rxBytes, txBytes, blkRead, blkWrite);
             LOGGER.info(metrics.toString());
             collected = true;
 
@@ -124,15 +143,19 @@ class ContainerMetrics {
     private double cpuPercent;
     private Long rxBytes;
     private Long txBytes;
+    private final long blkRead;
+    private final long blkWrite;
     private double memUsage;
 
-    public ContainerMetrics(long memLimit, long memUsed, double memUsage, double cpuPercent, Long rxBytes, Long txBytes) {
+    public ContainerMetrics(long memLimit, long memUsed, double memUsage, double cpuPercent, Long rxBytes, Long txBytes, long blkRead, long blkWrite) {
         this.memLimit = memLimit;
         this.memUsage = memUsage;
         this.memUsed = memUsed;
         this.cpuPercent = cpuPercent;
         this.rxBytes = rxBytes;
         this.txBytes = txBytes;
+        this.blkRead = blkRead;
+        this.blkWrite = blkWrite;
     }
 
     public long getMemLimit() {
@@ -159,6 +182,14 @@ class ContainerMetrics {
         return txBytes;
     }
 
+    public long getBlkRead() {
+        return blkRead;
+    }
+
+    public long getBlkWrite() {
+        return blkWrite;
+    }
+
     @Override
     public String toString() {
         return "ContainerMetrics{" +
@@ -168,6 +199,8 @@ class ContainerMetrics {
                 ", memUsage=" + memUsage +
                 ", rxBytes=" + rxBytes +
                 ", txBytes=" + txBytes +
+                ", blkRead=" + blkRead +
+                ", blkWrite=" + blkWrite +
                 '}';
     }
 }

@@ -55,6 +55,10 @@ public class MetricsExporter extends Collector {
             GaugeMetricFamily memUsedGauge = new GaugeMetricFamily("io_container_mem_used", "io_container_mem_used", labels);
             GaugeMetricFamily memUsageGauge = new GaugeMetricFamily("io_container_mem_usage", "io_container_mem_usage", labels);
             GaugeMetricFamily cpuUsageGauge = new GaugeMetricFamily("io_container_cpu_usage", "io_container_cpu_usage", labels);
+
+            CounterMetricFamily blockReadBytesCounter = new CounterMetricFamily("io_container_block_read_bytes_total", "io_container_block_read_bytes_total", labels);
+            CounterMetricFamily blockWriteBytesCounter = new CounterMetricFamily("io_container_block_write_bytes_total", "io_container_block_write_bytes_total", labels);
+
             CounterMetricFamily networkRxBytesCounter = new CounterMetricFamily("io_container_network_receive_bytes_total", "io_container_network_receive_bytes_total", labels);
             CounterMetricFamily networkTxBytesCounter = new CounterMetricFamily("io_container_network_transmit_bytes_total", "io_container_network_transmit_bytes_total", labels);
 
@@ -66,6 +70,9 @@ public class MetricsExporter extends Collector {
                 cpuUsageGauge.addMetric(labelValues, collector.getMetrics().getCpuPercent());
                 networkRxBytesCounter.addMetric(labelValues, collector.getMetrics().getRxBytes());
                 networkTxBytesCounter.addMetric(labelValues, collector.getMetrics().getTxBytes());
+
+                blockReadBytesCounter.addMetric(labelValues, collector.getMetrics().getBlkRead());
+                blockWriteBytesCounter.addMetric(labelValues, collector.getMetrics().getBlkWrite());
             });
 
             mfs.add(memLimitGauge);
@@ -74,6 +81,8 @@ public class MetricsExporter extends Collector {
             mfs.add(cpuUsageGauge);
             mfs.add(networkRxBytesCounter);
             mfs.add(networkTxBytesCounter);
+            mfs.add(blockReadBytesCounter);
+            mfs.add(blockWriteBytesCounter);
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
