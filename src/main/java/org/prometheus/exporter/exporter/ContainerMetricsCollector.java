@@ -64,23 +64,27 @@ public class ContainerMetricsCollector implements Runnable {
             long rxBytes = 0l;
             long txBytes = 0l;
 
-            for (String eth : stats.networks().keySet()) {
-                NetworkStats networkStats = stats.networks().get(eth);
-                rxBytes += networkStats.rxBytes();
-                txBytes += networkStats.txBytes();
+            if (stats.networks()!= null){
+                for (String eth : stats.networks().keySet()) {
+                    NetworkStats networkStats = stats.networks().get(eth);
+                    rxBytes += networkStats.rxBytes();
+                    txBytes += networkStats.txBytes();
+                }
             }
 
             long blkRead = 0l;
             long blkWrite = 0l;
 
-            for (Object bioEntry : stats.blockIoStats().ioServiceBytesRecursive()) {
-                if (bioEntry instanceof LinkedHashMap) {
-                    LinkedHashMap<String, Object> entry = (LinkedHashMap) bioEntry;
-                    if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("read")) {
-                        blkRead = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
-                    }
-                    if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("write")) {
-                        blkWrite = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
+            if (stats.blockIoStats()!= null) {
+                for (Object bioEntry : stats.blockIoStats().ioServiceBytesRecursive()) {
+                    if (bioEntry instanceof LinkedHashMap) {
+                        LinkedHashMap<String, Object> entry = (LinkedHashMap) bioEntry;
+                        if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("read")) {
+                            blkRead = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
+                        }
+                        if (String.valueOf(entry.getOrDefault("op", "UNKNOWN")).toLowerCase().equals("write")) {
+                            blkWrite = Long.parseLong(String.valueOf(entry.getOrDefault("value", "0")));
+                        }
                     }
                 }
             }
