@@ -110,10 +110,9 @@ public class ContainerMetricsCollector implements Runnable {
         long systemDelta = stats.cpuStats().systemCpuUsage() - previousSystem;
 
         if (systemDelta > 0 && cpuDelta > 0) {
-            cpuPercent = getCpuUsage(cpuDelta, systemDelta) * stats.cpuStats().cpuUsage().percpuUsage().size() * 100.0d;
+            cpuPercent = getCpuUsage(cpuDelta, systemDelta) * stats.cpuStats().cpuUsage().percpuUsage().size();
         }
         return cpuPercent;
-
     }
 
     private double getCpuUsage(long cpuDelta, long systemDelta) {
