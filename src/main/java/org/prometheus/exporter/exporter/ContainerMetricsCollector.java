@@ -48,6 +48,7 @@ public class ContainerMetricsCollector implements Runnable {
             labels.put("name", containerName);
             labels.put("image", container.image());
             ContainerStats stats = docker.stats(container.id());
+
             Long memLimit = stats.memoryStats().limit();
             Long memUsed = stats.memoryStats().usage();
 
