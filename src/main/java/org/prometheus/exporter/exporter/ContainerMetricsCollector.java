@@ -64,7 +64,7 @@ public class ContainerMetricsCollector implements Runnable {
             long rxBytes = 0l;
             long txBytes = 0l;
 
-            if (stats.networks()!= null){
+            if (stats.networks() != null) {
                 for (String eth : stats.networks().keySet()) {
                     NetworkStats networkStats = stats.networks().get(eth);
                     rxBytes += networkStats.rxBytes();
@@ -75,7 +75,7 @@ public class ContainerMetricsCollector implements Runnable {
             long blkRead = 0l;
             long blkWrite = 0l;
 
-            if (stats.blockIoStats()!= null) {
+            if (stats.blockIoStats() != null) {
                 for (Object bioEntry : stats.blockIoStats().ioServiceBytesRecursive()) {
                     if (bioEntry instanceof LinkedHashMap) {
                         LinkedHashMap<String, Object> entry = (LinkedHashMap) bioEntry;
@@ -90,7 +90,7 @@ public class ContainerMetricsCollector implements Runnable {
             }
 
             metrics = new ContainerMetrics(memLimit, memUsed, memUsage, cpuPercent, rxBytes, txBytes, blkRead, blkWrite);
-            LOGGER.info(metrics.toString());
+            LOGGER.info(containerName + ":" + metrics.toString());
             collected = true;
 
         } catch (Exception e) {
