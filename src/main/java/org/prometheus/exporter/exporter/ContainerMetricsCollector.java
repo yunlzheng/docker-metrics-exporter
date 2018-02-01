@@ -106,7 +106,7 @@ public class ContainerMetricsCollector implements Runnable {
     }
 
     private String formatLabel(String key) {
-        return String.format("container_label_%s", key.replace(".", "_").replace("-", "_")).replaceAll("/", "_").toLowerCase();
+        return String.format("container_label_%s", key.replaceAll(".", "_").replaceAll("-", "_")).replaceAll("/", "_").toLowerCase();
     }
 
     private double calculateCPUPercentUnix(Long previousCPU, Long previousSystem, ContainerStats stats) {
