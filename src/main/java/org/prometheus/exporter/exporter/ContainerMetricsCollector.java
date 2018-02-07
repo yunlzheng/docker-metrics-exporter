@@ -20,9 +20,9 @@ public class ContainerMetricsCollector implements Runnable {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ContainerMetricsCollector.class);
 
-    private final Container container;
-    private final DefaultDockerClient docker;
-    private final CountDownLatch latch;
+    private Container container;
+    private DefaultDockerClient docker;
+    private CountDownLatch latch;
 
     private boolean collected;
     private Map<String, String> labels = new HashMap<>();
@@ -33,6 +33,10 @@ public class ContainerMetricsCollector implements Runnable {
         this.docker = docker;
         this.latch = latch;
         collected = false;
+    }
+
+    protected ContainerMetricsCollector() {
+
     }
 
     @Override
@@ -105,8 +109,8 @@ public class ContainerMetricsCollector implements Runnable {
 
     }
 
-    private String formatLabel(String key) {
-        return String.format("container_label_%s", key.replaceAll(".", "_").replaceAll("-", "_")).replaceAll("/", "_").toLowerCase();
+    protected String formatLabel(String key) {
+        return String.format("container_label_%s", key.replace(".", "_").replace("-", "_")).replace("/", "_").replace("\\", "_").toLowerCase();
     }
 
     private double calculateCPUPercentUnix(Long previousCPU, Long previousSystem, ContainerStats stats) {
